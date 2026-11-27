@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asesmen Bahasa Inggris Kelas XII</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#1b2a25;--mute:#5d6e67;--line:#d5ded9;--acc:#0f6b55;--accbg:#e1f1ec;--ok:#1d7a3e;--okbg:#e2f4e8;--no:#b3261e;--nobg:#fbe7e5}
+@media (prefers-color-scheme:dark){:root{--bg:#121a17;--card:#1b2622;--ink:#e8efec;--mute:#9bb0a8;--line:#31413b;--acc:#52c4a4;--accbg:#1f3a32;--ok:#6fd48f;--okbg:#1b3626;--no:#ff8b82;--nobg:#3d2220}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Georgia,"Times New Roman",serif;padding:16px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:1.7rem;margin:.2em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin:14px 0}
+input{width:100%;padding:11px;margin:6px 0 12px;border:1px solid var(--line);border-radius:6px;font:inherit;background:var(--bg);color:var(--ink)}
+button{font:inherit;cursor:pointer;border:0;border-radius:6px;padding:11px 20px;background:var(--acc);color:#fff}
+@media (prefers-color-scheme:dark){button{color:#0b1512}}
+button.alt{background:var(--accbg);color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,.opt:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:.9rem;margin:8px 0}
+.q{font-size:1.1rem;margin:12px 0;white-space:pre-line}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.opt:hover:not(:disabled){border-color:var(--acc)}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}
+.opt.no{background:var(--nobg);border-color:var(--no)}
+.fb{margin-top:12px;padding:12px 14px;border-radius:8px;font-size:.96rem;white-space:pre-line}
+.fb.ok{background:var(--okbg)}.fb.no{background:var(--nobg)}
+.hide{display:none}
+.score{font-size:3rem;margin:0}
+.rev{border-top:1px solid var(--line);padding:10px 0;font-size:.95rem}
+.rev b.ok{color:var(--ok)}.rev b.no{color:var(--no)}
+.status{margin:10px 0;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Asesmen Bahasa Inggris (Wajib) – Kelas XII</h1>
+
+<!-- LAYAR 1: IDENTITAS -->
+<div id="s1" class="card">
+  <p>30 soal pilihan ganda. Setelah memilih jawaban, kamu langsung melihat benar/salah beserta penjelasannya. Hasil akhir otomatis dikirim ke guru.</p>
+  <label>Nama lengkap<input id="nama" autocomplete="name"></label>
+  <label>Kelas<input id="kelas" placeholder="contoh: XII IPA 1"></label>
+  <button id="mulai">Mulai asesmen</button>
+</div>
+
+<!-- LAYAR 2: SOAL -->
+<div id="s2" class="card hide">
+  <div class="bar"><i id="pb"></i></div>
+  <div class="meta"><span id="no"></span><span id="skor"></span></div>
+  <div class="q" id="q"></div>
+  <div id="opts"></div>
+  <div id="fb" class="fb hide"></div>
+  <p><button id="next" disabled>Soal berikutnya</button></p>
+</div>
+
+<!-- LAYAR 3: HASIL -->
+<div id="s3" class="card hide">
+  <p class="meta">Hasil akhir</p>
+  <p class="score" id="nilai"></p>
+  <p id="ringkas"></p>
+  <p class="status" id="status"></p>
+  <p><button id="kirim" class="alt">Kirim ulang ke email guru</button> <button id="ulang" class="alt">Ulangi asesmen</button></p>
+  <div id="review"></div>
+</div>
+</div>
+
+<script>
+/* ====== PENGATURAN – UBAH DI SINI ====== */
+const FORMSPREE_URL = "https://formspree.io/f/GANTI_DENGAN_ID_ANDA";
+/* ======================================= */
+
+// q = soal, o = pilihan, a = indeks jawaban benar (0=A,1=B,2=C,3=D), e = penjelasan
+const S = [
+{q:"If I ___ more time, I would learn a new language.",o:["have","had","have had","would have"],a:1,e:"Conditional type 2 (pengandaian kini yang tidak nyata): If + simple past, would + V1. Jadi: If I had more time, ..."},
+{q:"If she ___ harder, she would have passed the exam.",o:["studies","had studied","would study","studied"],a:1,e:"Conditional type 3 (penyesalan masa lalu): If + past perfect, would have + V3. Jadi: If she had studied harder, ..."},
+{q:"The new library ___ by the mayor next week.",o:["will open","is opening","will be opened","opened"],a:2,e:"Kalimat pasif future: will + be + V3. Perpustakaan 'dibuka' oleh wali kota, maka: will be opened."},
+{q:"The bridge ___ in 1998 and still stands today.",o:["built","was built","is built","has built"],a:1,e:"Pasif simple past (ada keterangan waktu 1998): was/were + V3. Jadi: was built."},
+{q:"\"I am very tired,\" Dina said.\nReported speech: Dina said that she ___ very tired.",o:["is","has been","was","were"],a:2,e:"Dalam reported speech, present tense bergeser ke past tense: am → was; I → she."},
+{q:"He asked me, \"Where do you live?\"\nReported speech: He asked me where ___.",o:["do I live","I live","did I live","I lived"],a:3,e:"Pertanyaan tidak langsung memakai susunan kalimat positif (tanpa do/did) dan tense bergeser: do you live → I lived."},
+{q:"The woman ___ lives next door is a doctor.",o:["which","who","whose","whom"],a:1,e:"'Who' dipakai untuk orang sebagai subjek relative clause. 'The woman who lives...'"},
+{q:"This is the student ___ essay won the national competition.",o:["who","which","whose","whom"],a:2,e:"'Whose' menyatakan kepemilikan (essay milik student). Setelah whose langsung diikuti kata benda."},
+{q:"You ___ park here. The sign says it is strictly prohibited.",o:["must","needn't","mustn't","might"],a:2,e:"Mustn't menyatakan larangan. 'Needn't' berarti tidak perlu, bukan dilarang."},
+{q:"Rani didn't come to school yesterday. She ___ sick.",o:["should be","must have been","can be","would been"],a:1,e:"Must have + V3 dipakai untuk menyimpulkan dugaan kuat tentang masa lalu."},
+{q:"I wish I ___ a bird, so I could fly over the mountains.",o:["am","will be","were","have been"],a:2,e:"Wish untuk keadaan kini yang tidak nyata memakai simple past; 'were' dipakai untuk semua subjek."},
+{q:"My sister enjoys ___ novels in her free time.",o:["read","to read","reads","reading"],a:3,e:"Verb 'enjoy' diikuti gerund (V-ing): enjoy reading."},
+{q:"What is the main purpose of an analytical exposition text?",o:["To entertain readers with a story","To persuade readers that something is the case","To explain how to make something","To report an event in the newspaper"],a:1,e:"Analytical exposition bertujuan meyakinkan pembaca bahwa suatu topik/pendapat itu benar melalui argumen."},
+{q:"Which is the correct generic structure of an analytical exposition?",o:["Orientation – Complication – Resolution","Goal – Materials – Steps","Thesis – Arguments – Reiteration","Newsworthy event – Background – Sources"],a:2,e:"Struktur analytical exposition: Thesis (posisi penulis), Arguments (alasan), Reiteration (penegasan ulang)."},
+{q:"Which part of a news item text summarizes what happened, to whom, when, and where?",o:["Newsworthy event","Background events","Sources","Resolution"],a:0,e:"Newsworthy event menceritakan peristiwa secara ringkas. Background events menjelaskan latar, Sources berisi saksi/narasumber."},
+{q:"Which language feature is typically found in a narrative text?",o:["Simple past tense","Imperative sentences","Simple present for general facts","Modal 'should' for recommendation"],a:0,e:"Narrative menceritakan kejadian masa lampau sehingga dominan memakai simple past tense."},
+{q:"Which sentence is commonly used in a procedure text?",o:["Once upon a time, a prince lived in a castle.","Pour the hot water into the cup and stir well.","Dolphins are mammals that live in the sea.","The government should ban plastic bags."],a:1,e:"Procedure text memakai kalimat perintah (imperative) dengan kata kerja bentuk dasar di awal: Pour, stir, add, etc."},
+{q:"\"Komodo dragons are the largest living lizards. They live on several islands in Indonesia.\"\nThe text above is an example of ___ text.",o:["narrative","report","procedure","news item"],a:1,e:"Report text mendeskripsikan sesuatu secara umum (klasifikasi dan ciri-ciri) dengan simple present tense."},
+{q:"Read the text.\n\"Many students spend hours on social media every day. As a result, they have less time to study and sleep. Experts suggest limiting screen time to two hours a day.\"\n\nWhat is the main idea of the text?",o:["Social media is the best learning tool.","Experts dislike all technology.","Students should sleep for two hours a day.","Excessive social media use can harm students' daily activities."],a:3,e:"Teks membahas dampak negatif penggunaan media sosial berlebihan (kurang belajar dan tidur) serta saran pembatasan."},
+{q:"(Same text) The word \"limiting\" is closest in meaning to ___.",o:["restricting","increasing","ignoring","extending"],a:0,e:"Limiting = membatasi, sinonimnya restricting."},
+{q:"\"Rina and Sari joined the debate club. They believe that it improves speaking skills.\"\nThe word \"it\" refers to ___.",o:["Rina","Sari","the debate club","speaking skills"],a:2,e:"'It' menunjuk benda tunggal yang disebut sebelumnya, yaitu the debate club."},
+{q:"The government announced a significant change in the education policy.\nThe word \"significant\" has the same meaning as ___.",o:["unimportant","important","temporary","unclear"],a:1,e:"Significant = penting/berarti, sinonim important."},
+{q:"Water was abundant in the village during the rainy season.\nThe opposite of \"abundant\" is ___.",o:["plentiful","enough","scarce","fresh"],a:2,e:"Abundant = melimpah; antonimnya scarce = langka/sedikit."},
+{q:"The air quality is getting worse. ___, many people suffer from respiratory problems.",o:["However","Therefore","Although","Besides"],a:1,e:"Hubungan sebab-akibat membutuhkan 'Therefore' (oleh karena itu). However = kontras; besides = tambahan."},
+{q:"___ he was exhausted, he finished the report on time.",o:["Because","So","Although","Unless"],a:2,e:"Kalimat menunjukkan pertentangan (lelah tetapi tetap selesai), maka 'Although'."},
+{q:"By the time we arrived at the cinema, the movie ___.",o:["starts","has started","was start","had started"],a:3,e:"'By the time' + simple past menuntut past perfect pada klausa lainnya untuk kejadian yang lebih dulu: had started."},
+{q:"Nadia ___ for the scholarship since January.",o:["prepares","is preparing","has been preparing","prepared"],a:2,e:"'Since January' + aktivitas berlanjut hingga sekarang = present perfect continuous: has been preparing."},
+{q:"Which expression is used to disagree politely?",o:["That's absolutely right.","I couldn't agree more.","I see your point, but I'm afraid I can't agree.","You are totally correct."],a:2,e:"Tiga opsi lainnya menyatakan persetujuan. Opsi C menyampaikan ketidaksetujuan dengan sopan."},
+{q:"Which sentence is appropriate for closing a job application letter?",o:["Thanks a lot, bye!","See you tomorrow.","I look forward to hearing from you.","Please reply me fast."],a:2,e:"Surat lamaran bersifat formal. 'I look forward to hearing from you' adalah penutup formal yang sopan."},
+{q:"Not only ___ the exam, but she also received a scholarship.",o:["did she pass","she passed","she did pass","passed she"],a:0,e:"Kata negatif 'Not only' di awal kalimat membutuhkan inversi (auxiliary sebelum subjek): did she pass."}
+];
+
+const $=id=>document.getElementById(id);
+let i=0,benar=0,jaw=[],peserta={};
+
+$("mulai").onclick=()=>{
+  const n=$("nama").value.trim(),k=$("kelas").value.trim();
+  if(!n||!k){alert("Isi nama dan kelas terlebih dahulu.");return}
+  peserta={n,k};i=0;benar=0;jaw=[];
+  $("s1").classList.add("hide");$("s2").classList.remove("hide");tampil();
+};
+
+function tampil(){
+  const d=S[i];
+  $("no").textContent="Soal "+(i+1)+" dari "+S.length;
+  $("skor").textContent="Benar: "+benar;
+  $("pb").style.width=(i/S.length*100)+"%";
+  $("q").textContent=d.q;
+  $("fb").className="fb hide";$("next").disabled=true;
+  $("next").textContent=i===S.length-1?"Lihat hasil":"Soal berikutnya";
+  const box=$("opts");box.innerHTML="";
+  d.o.forEach((t,x)=>{
+    const b=document.createElement("button");
+    b.className="opt";b.textContent="ABCD"[x]+". "+t;
+    b.onclick=()=>pilih(x);box.appendChild(b);
+  });
+}
+
+function pilih(x){
+  const d=S[i],bs=$("opts").children,ok=x===d.a;
+  [...bs].forEach((b,y)=>{b.disabled=true;if(y===d.a)b.classList.add("ok");else if(y===x)b.classList.add("no")});
+  if(ok)benar++;
+  jaw[i]=x;
+  const f=$("fb");
+  f.className="fb "+(ok?"ok":"no");
+  f.textContent=(ok?"Benar! ":"Salah. Jawaban yang tepat: "+"ABCD"[d.a]+". ")+"\n"+d.e;
+  $("skor").textContent="Benar: "+benar;
+  $("next").disabled=false;
+}
+
+$("next").onclick=()=>{
+  if(i<S.length-1){i++;tampil()}else selesai();
+};
+
+function selesai(){
+  $("s2").classList.add("hide");$("s3").classList.remove("hide");
+  const nilai=Math.round(benar/S.length*100);
+  $("nilai").textContent=nilai;
+  $("ringkas").textContent=peserta.n+" ("+peserta.k+") menjawab benar "+benar+" dari "+S.length+" soal.";
+  $("review").innerHTML=S.map((d,x)=>{
+    const ok=jaw[x]===d.a;
+    return '<div class="rev"><b class="'+(ok?"ok":"no")+'">'+(x+1)+'. '+(ok?"Benar":"Salah")+'</b> – Jawabanmu: '+"ABCD"[jaw[x]]+', kunci: '+"ABCD"[d.a]+'</div>';
+  }).join("");
+  kirim();
+}
+
+async function kirim(){
+  const st=$("status");st.textContent="Mengirim hasil ke email guru...";
+  const nilai=Math.round(benar/S.length*100);
+  const detail=S.map((d,x)=>(x+1)+". Jawaban siswa: "+"ABCD"[jaw[x]]+" | Kunci: "+"ABCD"[d.a]+" | "+(jaw[x]===d.a?"BENAR":"SALAH")).join("\n");
+  try{
+    const r=await fetch(FORMSPREE_URL,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({_subject:"Hasil Asesmen B. Inggris XII – "+peserta.n,Nama:peserta.n,Kelas:peserta.k,Nilai:nilai,"Jumlah benar":benar+" / "+S.length,Waktu:new Date().toLocaleString("id-ID"),Rincian:detail})});
+    if(!r.ok)throw 0;
+    st.textContent="Hasil berhasil dikirim ke email guru.";
+  }catch(e){
+    st.textContent="Pengiriman gagal. Periksa koneksi internet lalu tekan 'Kirim ulang ke email guru'.";
+  }
+}
+$("kirim").onclick=kirim;
+$("ulang").onclick=()=>{$("s3").classList.add("hide");$("s1").classList.remove("hide")};
+</script>
+</body>
+</html>
